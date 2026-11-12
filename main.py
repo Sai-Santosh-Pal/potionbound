@@ -25,22 +25,71 @@ def get_bg(color):
     
     return tiles, image
 
-def draw(window, bg_list, img):
+class Player(pygame.sprite.Sprite):
+    COLOR = (255, 0, 0)
+    GRAVITY = 1
+    def __init__(self, x, y, width, height):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.x_vel = 0
+        self.y_vel = 0
+        self.mask = None
+        self.direction = "left"
+        self.animation_count = 0
+
+    def move(self, dx, dy):
+        self.rect.x += dx
+        self.rect.y += dy
+
+    def move_left(self, vel):
+        self.x_vel = -vel
+        if self.direction != "left":
+            self.direction = "left"
+            self.animation_count = 0
+
+    def move_right(self, vel):
+        self.x_vel = vel
+        if self.direction != "right":
+            self.direction = "right"
+            self.animation_count = 0
+
+    def loop(self, fps):
+        self.move(self.x_vel, self.y_vel)
+
+    def draw(self, window):
+        pygame.draw.rect(window, self.COLOR, self.rect)
+
+    
+
+def draw(window, bg_list, img, player):
     for tile in bg_list:
         window.blit(img, tuple(tile))
+    player.draw(window)
     pygame.display.update()
+
+def movement(player):
+    key = pygame.key.get_pressed()
+    player.x_vel = 0
+    if key[pygame.K_LEFT]:
+        player.move_left(player_vel)
+    if key[pygame.K_RIGHT]:
+        player.move_right(player_vel)
+
+
 
 def main(window):
     clock = pygame.time.Clock()
     bg, bg_img = get_bg("Green.png")
     run = True
+    player = Player(100, 200, 50, 50)
     while run:
-        draw(window, bg, bg_img)
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 break
+        player.loop(FPS)
+        movement(player)
+        draw(window, bg, bg_img, player)
     pygame.quit()
     quit()
 
