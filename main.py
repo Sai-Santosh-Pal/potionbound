@@ -25,9 +25,37 @@ def get_bg(color):
     
     return tiles, image
 
+def flip(sprites):
+    return [pygame.transform.flip(sprite, True, False) for sprite in sprites]
+
+def load_sprites(dir1, dir2, w, h, d=False):
+    path = join("assets", dir1, dir2)
+    images = [f for f in listdir(path) if isfile(join(path,f))]
+    # print(images)
+    all_sprites = {}
+    for img in images:
+        spritesheet = pygame.image.load(join(path, img)).convert_alpha()
+        sprites = []
+        for i in range(spritesheet.get_width()//w):
+            surface = pygame.Surface((w, h), pygame.SRCALPHA, 32)
+            rect = pygame.Rect(i * w, 0,w, h)
+            surface.blit(spritesheet, (0,0), rect)
+            sprites.append(pygame.transform.scale2x(surface))
+        if d:
+            all_sprites[img.replace(".png", "") + "_right"] = sprites
+            all_sprites[img.replace(".png", "") + "_left"] = flip(sprites)
+        else:
+            all_sprites[img.replace(".png", "")] = sprites
+    return all_sprites
+
+load_sprites('MainCharacters', 'MaskDude', 10, 10)
+
 class Player(pygame.sprite.Sprite):
     COLOR = (255, 0, 0)
     GRAVITY = 1
+    SPRITES = load_sprites("MainCharacters", "NinjaFrog", 32, 32, True)
+    ANIMATION_DELAY = 1
+
     def __init__(self, x, y, width, height):
         self.rect = pygame.Rect(x, y, width, height)
         self.x_vel = 0
@@ -35,6 +63,7 @@ class Player(pygame.sprite.Sprite):
         self.mask = None
         self.direction = "left"
         self.animation_count = 0
+        self.fall_count = 0
 
     def move(self, dx, dy):
         self.rect.x += dx
@@ -53,12 +82,30 @@ class Player(pygame.sprite.Sprite):
             self.animation_count = 0
 
     def loop(self, fps):
+        # if self.rect.y > 700:
+        #     self.y_vel = 0
+        # else:
+        #     self.y_vel += min(1, (self.fall_count/fps)*self.GRAVITY)
+        self.y_vel += min(1, (self.fall_count/fps)*self.GRAVITY)
         self.move(self.x_vel, self.y_vel)
+        self.fall_count += 1
+        self.animate()
+        
 
     def draw(self, window):
-        pygame.draw.rect(window, self.COLOR, self.rect)
+        # print(self.SPRITES)
+        # self.sprite = self.SPRITES["idle_" + self.direction][0]
+        window.blit(self.sprite, (self.rect.x, self.rect.y))
 
-    
+    def animate(self):
+        spritesheet = "idle"
+        if self.x_vel != 0:
+            spritesheet = "run"
+        name = spritesheet + "_" + self.direction
+        sprites = self.SPRITES[name]
+        sprite_index = (self.animation_count // self.ANIMATION_DELAY) % len(sprites)
+        self.sprite = sprites[sprite_index]
+        self.animation_count += 1
 
 def draw(window, bg_list, img, player):
     for tile in bg_list:
@@ -73,8 +120,6 @@ def movement(player):
         player.move_left(player_vel)
     if key[pygame.K_RIGHT]:
         player.move_right(player_vel)
-
-
 
 def main(window):
     clock = pygame.time.Clock()
