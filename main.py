@@ -163,10 +163,10 @@ class Object(pygame.sprite.Sprite):
         window.blit(self.image, (self.rect.x - offset_x, self.rect.y))
 
 def get_block(size):
-    path = join("assets", "Terrain", "Terrain.png")
+    path = join("assets", "Terrain", "Green Terrain.png")
     image = pygame.image.load(path).convert_alpha()
     surface = pygame.Surface((size, size), pygame.SRCALPHA, 32)
-    rect = pygame.Rect(0, 128, size, size)
+    rect = pygame.Rect(272, 64, size, size)
     surface.blit(image, (0,0), rect)
     return pygame.transform.scale2x(surface)
 
@@ -182,7 +182,7 @@ class Fire(Object):
     ANIMATION_DELAY = 3
     def __init__(self, x, y, width, height):
         super().__init__(x, y, width, height, "fire")
-        self.fire = load_sprites("Traps", "Fire", width, height)
+        self.fire = load_sprites("Green Traps", "Fire", width, height)
         print(self.fire)
         self.image = self.fire["off"][0]
         self.animation_count = 0
@@ -258,12 +258,13 @@ def main(window):
     run = True
     player = Player(100, 200, 50, 50)
     block_size = 96
-    fire = Fire(100, HEIGHT - block_size - 64, 16, 32)
+    floor_dimension = HEIGHT + 30
+    fire = Fire(100, floor_dimension - block_size - 64, 16, 32)
     fire.on()
-    floor = [Block(i*block_size, HEIGHT - block_size, block_size) for i in range(-WIDTH//block_size, (WIDTH*2)//block_size)]
+    floor = [Block(i*block_size, floor_dimension - block_size, block_size) for i in range(-WIDTH//block_size, (WIDTH*2)//block_size)]
     # blocks = [Block(0,HEIGHT - block_size, block_size)]
     offset_x = 0
-    objects = [*floor, Block(0, HEIGHT - block_size*2, block_size), Block(block_size*3, HEIGHT - block_size*4, block_size), fire]
+    objects = [*floor, Block(0, floor_dimension - block_size*2, block_size), Block(block_size*3, floor_dimension - block_size*4, block_size), fire]
     scroll_area_w = 200
     while run:
         clock.tick(FPS)
