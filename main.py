@@ -116,10 +116,10 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))
         self.mask = pygame.mask.from_surface(self.sprite)
     
-    def draw(self, window, offset_x):
+    def draw(self, window, offset_x, offset_y):
         # print(self.SPRITES)
         # self.sprite = self.SPRITES["idle_" + self.direction][0]
-        window.blit(self.sprite, (self.rect.x - offset_x, self.rect.y))
+        window.blit(self.sprite, (self.rect.x - offset_x, self.rect.y - offset_y))
 
     def landed(self):
         self.fall_count = 0
@@ -159,8 +159,8 @@ class Object(pygame.sprite.Sprite):
         self.height = height
         self.name = name
 
-    def draw(self, window, offset_x):
-        window.blit(self.image, (self.rect.x - offset_x, self.rect.y))
+    def draw(self, window, offset_x, offset_y):
+        window.blit(self.image, (self.rect.x - offset_x, self.rect.y - offset_y))
 
 def get_block(size):
     path = join("assets", "Terrain", "Green Terrain.png")
@@ -169,7 +169,6 @@ def get_block(size):
     rect = pygame.Rect(272, 64, size, size)
     surface.blit(image, (0,0), rect)
     return pygame.transform.scale2x(surface)
-
 
 class Block(Object):
     def __init__(self, x, y, size):
@@ -204,12 +203,12 @@ class Fire(Object):
         if self.animation_count // self.ANIMATION_DELAY > len(sprites):
             self.animation_count = 0
 
-def draw(window, bg_list, img, player, objects, offset_x):
+def draw(window, bg_list, img, player, objects, offset_x, offset_y):
     for tile in bg_list:
         window.blit(img, tuple(tile))
     for obj in objects:
-        obj.draw(window, offset_x)
-    player.draw(window, offset_x)
+        obj.draw(window, offset_x, offset_y)
+    player.draw(window, offset_x, offset_y)
     pygame.display.update()
 
 def collision_vertical(player, objects, dy):
@@ -262,10 +261,13 @@ def main(window):
     fire = Fire(100, floor_dimension - block_size - 64, 16, 32)
     fire.on()
     floor = [Block(i*block_size, floor_dimension - block_size, block_size) for i in range(-WIDTH//block_size, (WIDTH*2)//block_size)]
+    floor_layer2 = [Block(i*block_size, floor_dimension - block_size*2, block_size) for i in range(-WIDTH//block_size, (WIDTH*2)//block_size)]
     # blocks = [Block(0,HEIGHT - block_size, block_size)]
     offset_x = 0
-    objects = [*floor, Block(0, floor_dimension - block_size*2, block_size), Block(block_size*3, floor_dimension - block_size*4, block_size), fire]
+    offset_y = 0
+    objects = [*floor, Block(0, floor_dimension - block_size*2, block_size), Block(block_size*3, floor_dimension - block_size*4, block_size), Block(block_size*3, floor_dimension - block_size*5, block_size), Block(block_size*2, floor_dimension - block_size*7, block_size), fire]
     scroll_area_w = 200
+    scroll_area_h = 120
     while run:
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -279,9 +281,11 @@ def main(window):
         fire.loop()
         movement(player, objects)
         # collision_vertical(player, floor, 1)
-        draw(window, bg, bg_img, player, objects, offset_x)
+        draw(window, bg, bg_img, player, objects, offset_x, offset_y)
         if (player.rect.right - offset_x >= WIDTH - scroll_area_w and player.x_vel > 0) or (player.rect.left - offset_x <= scroll_area_w and player.x_vel < 0):
             offset_x += player.x_vel
+        if (player.rect.top - offset_y >= HEIGHT - scroll_area_h and player.y_vel > 0) or (player.rect.bottom - offset_y <= scroll_area_h and player.y_vel < 0):
+            offset_y += player.y_vel
     pygame.quit()
     quit()
 
