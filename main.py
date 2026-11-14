@@ -186,12 +186,26 @@ def collision_vertical(player, objects, dy):
             collided.append(obj)
     return collided
 
+def check_collision(player, objects, dx):
+    player.move(dx, 0)
+    player.update()
+    collided = None
+    for obj in objects:
+        if pygame.sprite.collide_mask(player, obj):
+            collided = obj
+            break
+    player.move(-dx, 0)
+    player.update()
+    return collided
+
 def movement(player, objects):
     key = pygame.key.get_pressed()
     player.x_vel = 0
-    if key[pygame.K_LEFT]:
+    collide_left = check_collision(player, objects, -player_vel * 2)
+    collide_right = check_collision(player, objects, player_vel * 2)
+    if key[pygame.K_LEFT] and not collide_left:
         player.move_left(player_vel)
-    if key[pygame.K_RIGHT]:
+    if key[pygame.K_RIGHT] and not collide_right:
         player.move_right(player_vel)
     collision_vertical(player, objects, player.y_vel)
 
@@ -204,6 +218,7 @@ def main(window):
     floor = [Block(i*block_size, HEIGHT - block_size, block_size) for i in range(-WIDTH//block_size, (WIDTH*2)//block_size)]
     # blocks = [Block(0,HEIGHT - block_size, block_size)]
     offset_x = 0
+    objects = [*floor, Block(0, HEIGHT - block_size*2, block_size), Block(block_size*3, HEIGHT - block_size*4, block_size)]
     scroll_area_w = 200
     while run:
         clock.tick(FPS)
@@ -215,9 +230,9 @@ def main(window):
                 if event.key == pygame.K_SPACE and player.jump_count < 2:
                     player.jump()
         player.loop(FPS)
-        movement(player, floor)
+        movement(player, objects)
         # collision_vertical(player, floor, 1)
-        draw(window, bg, bg_img, player, floor, offset_x)
+        draw(window, bg, bg_img, player, objects, offset_x)
         if (player.rect.right - offset_x >= WIDTH - scroll_area_w and player.x_vel > 0) or (player.rect.left - offset_x <= scroll_area_w and player.x_vel < 0):
             offset_x += player.x_vel
     pygame.quit()
