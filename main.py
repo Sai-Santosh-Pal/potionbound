@@ -177,6 +177,14 @@ class Block(Object):
         self.image.blit(block, (0,0))
         self.mask = pygame.mask.from_surface(self.image)
 
+class Finish(Object):
+    def __init__(self, x, y, size):
+        super().__init__(x, y, size, size, "finish")
+        block = get_block(size)
+        self.image.blit(block, (0,0))
+        self.mask = pygame.mask.from_surface(self.image)
+
+
 class Fire(Object):
     ANIMATION_DELAY = 3
     def __init__(self, x, y, width, height):
@@ -250,22 +258,25 @@ def movement(player, objects):
     for obj in to_check:
         if obj and obj.name == "fire":
             player.is_hit()
+        if obj and obj.name == "finish":
+            print("finish line reached")
 
 def main(window):
     clock = pygame.time.Clock()
     bg, bg_img = get_bg("Green.png")
-    run = True
-    player = Player(100, 200, 50, 50)
-    block_size = 96
     floor_dimension = HEIGHT + 30
-    fire = Fire(100, floor_dimension - block_size - 64, 16, 32)
+    run = True
+    player = Player(50, floor_dimension - 50, 50, 50)
+    block_size = 96
+    fire = Fire(500, floor_dimension - block_size - 64, 16, 32)
+    finish_line = Finish(400, 300, block_size)
     fire.on()
     floor = [Block(i*block_size, floor_dimension - block_size, block_size) for i in range(-WIDTH//block_size, (WIDTH*2)//block_size)]
-    floor_layer2 = [Block(i*block_size, floor_dimension - block_size*2, block_size) for i in range(-WIDTH//block_size, (WIDTH*2)//block_size)]
+    # floor_layer2 = [Block(i*block_size, floor_dimension - block_size*2, block_size) for i in range(-WIDTH//block_size, (WIDTH*2)//block_size)]
     # blocks = [Block(0,HEIGHT - block_size, block_size)]
     offset_x = 0
     offset_y = 0
-    objects = [*floor, Block(0, floor_dimension - block_size*2, block_size), Block(block_size*3, floor_dimension - block_size*4, block_size), Block(block_size*3, floor_dimension - block_size*5, block_size), Block(block_size*2, floor_dimension - block_size*7, block_size), fire]
+    objects = [*floor, Block(0, floor_dimension - block_size*2, block_size), Block(block_size*3, floor_dimension - block_size*4, block_size), Block(block_size*3, floor_dimension - block_size*5, block_size), Block(block_size*2, floor_dimension - block_size*7, block_size), fire, finish_line]
     scroll_area_w = 200
     scroll_area_h = 120
     while run:
